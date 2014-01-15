@@ -1,13 +1,9 @@
-var inherits = require('inherits');
-var EventEmitter = require('events').EventEmitter;
 var expand = require('brace-expansion');
 
 module.exports = Attractor;
-inherits(Attractor, EventEmitter);
 
 function Attractor (attrs) {
     if (!(this instanceof Attractor)) return new Attractor(attrs);
-    EventEmitter.call(this);
     
     this._selectors = {};
     
@@ -37,7 +33,7 @@ Attractor.prototype.scan = function (root) {
         var elems = root.querySelectorAll(sel);
         for (var j = 0; j < elems.length; j++) {
             for (var k = 0; k < attr.length; k++) {
-                attr[k].cb(elems[j], attr[k].attr, attr[k].index);
+                attr[k].cb.call(this, elems[j], attr[k].attr, attr[k].index);
             }
         }
     }
