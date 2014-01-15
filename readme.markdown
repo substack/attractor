@@ -69,9 +69,6 @@ If `bindings` are given,
 
 ## attr.scan(element)
 
-
-## attr.scan(element)
-
 Scan the dom node `element` for nodes matching
 
 # ecosystem
