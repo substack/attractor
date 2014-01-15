@@ -120,3 +120,16 @@ For an example of a frontend attractor module, look at the
 
 * scopes - allow `bindings` to be deeply nested
 * attr-select - make a list selectable
+* event-handling modules
+
+# install
+
+With [npm](https://npmjs.org) do:
+
+```
+npm install attractor
+```
+
+# license
+
+MIT
