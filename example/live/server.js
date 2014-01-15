@@ -28,5 +28,5 @@ var server = http.createServer(function (req, res) {
 server.listen(5000);
 
 var shoe = require('shoe');
-var sock = shoe(function (stream) { stream.pipe(liver(db)).pipe(stream) });
+var sock = shoe(function (stream) { stream.pipe(feed(db)).pipe(stream) });
 sock.install(server, '/sock');

@@ -2,11 +2,17 @@ var render = require('./render.js');
 var db = require('multilevel-feed')();
 
 var live = require('attr-range')(function (range) {
-    db.livefeed(range).pipe(render().sortTo(range.element));
+    var r = render();
+    db.livefeed({ start: range.start, end: range.end }).pipe(r);
+    r.on('element', function (elem) {
+        attr.scan(elem);
+    });
+    r.sortTo(range.element, '.score');
 });
 
 var attractor = require('../../');
-var attr = attract({ 'data-start': live });
+var attr = attractor({ 'data-start': live });
+attr.scan(document);
 
-var shoe = require('shoe');
-db.pipe(shoe('/sock')).pipe(db);
+var sock = require('shoe')('/sock');
+sock.pipe(db.createRpcStream()).pipe(sock);

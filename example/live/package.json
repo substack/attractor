@@ -16,7 +16,7 @@
     "watchify": "~0.5.0"
   },
   "scripts": {
-    "build": "browserify browser.js -o bundle/build.js",
-    "watch": "watchify browser.js -o bundle/build.js -dv"
+    "build": "browserify browser.js -t brfs-o static/bundle.js",
+    "watch": "watchify browser.js -t brfs -o static/bundle.js -dv"
   }
 }

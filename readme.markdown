@@ -50,6 +50,8 @@ attribute system in place. Let's go crazy and make a web app that renders in
 node and in the browser with page content that updates automatically whenever
 the database changes and full database access from the client!
 
+COMING SOON
+
 # methods
 
 ``` js
@@ -114,3 +116,7 @@ finding it.
 For an example of a frontend attractor module, look at the
 [attr-bind](https://npmjs.org/package/attr-bind) module.
 
+# todo
+
+* scopes - allow `bindings` to be deeply nested
+* attr-select - make a list selectable
