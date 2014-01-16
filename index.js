@@ -31,6 +31,11 @@ Attractor.prototype.scan = function (root) {
         var sel = keys[i];
         var attr = this._selectors[sel];
         var elems = root.querySelectorAll(sel);
+        if (root.getAttribute && root.getAttribute(attr[0].attr)) {
+            elems = [].slice.call(elems);
+            elems.unshift(root);
+        }
+        
         for (var j = 0; j < elems.length; j++) {
             for (var k = 0; k < attr.length; k++) {
                 attr[k].cb.call(this, elems[j], attr[k].attr, attr[k].index);
