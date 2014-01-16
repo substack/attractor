@@ -82,6 +82,11 @@ flourish, in the [node.js spirit](https://github.com/rvagg/node-levelup) of
 In furtherance of these goals, it's important that attractor modules should be
 trivial to reuse outside of attractor itself where possible.
 
+## find modules
+
+Browse npm packages that have been
+[tagged with the attractor keyword](https://npmjs.org/browse/keyword/attractor).
+
 ## write an attractor module
 
 To create a frontend attractor module, just provide a function that is
@@ -106,9 +111,12 @@ modules will need the `attr` instance such as modules that need to invoke the
 `scan()` to analyze new content and modules that will need to emit messages for
 an attached database layer.
 
-If you name your frontend module starting with `attr-` then people can assume
-that it was built for attractor compatibility and they will have an easier time
-finding it.
+Make *sure* to add a keyword in your package.json for `"attractor"` so that
+[people will know how to find your module](https://npmjs.org/browse/keyword/attractor).
+
+If you also name your frontend module starting with `attr-` then people can
+assume that it was built for attractor compatibility and they will have an
+easier time finding it, but this isn't strictly necessary.
 
 For an example of a frontend attractor module, look at the
 [attr-bind](https://npmjs.org/package/attr-bind) module.
