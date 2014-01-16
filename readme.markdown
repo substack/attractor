@@ -177,7 +177,17 @@ Return a new attractor instance `attr`.
 `bindings` should map
 [brace-expansion](https://npmjs.org/package/brace-expansion)
 
-If `bindings` are given, 
+If `bindings` are given, each key will be walked over and `attr.add(key, value)`
+will be called on each `key,value` pair.
+
+## attr.add(attrName, fn)
+
+Add an attribute function `fn` for elements that have attributes matching `attrName`.
+
+`attrName` is a string. The attribute value of each element in the
+[brace-expansion](https://npmjs.org/package/brace-expansion)
+of `attrName` will be sent after the `elem` in `fn(elem, value...)` when a
+matching element is found.
 
 ## attr.scan(element)
 
@@ -209,19 +219,18 @@ Here's a basic template you can use:
 
 ``` js
 module.exports = function (opts) {
-    return function (elem, attrName) {
+    return function (elem, value) {
         // ...
     };
 };
 ```
 
 Inside your inner function, `this` will be set to the attractor instance `attr`.
-You should only rely on `this` if your module actually needs access to the
+You should only rely on `attr` if your module actually needs access to the
 attribute instance. Otherwise, your module can enjoy a wider audience of people
 who aren't using attractor if you stick to the basic signature. However, some
 modules will need the `attr` instance such as modules that need to invoke the
-`scan()` to analyze new content and modules that will need to emit messages for
-an attached database layer.
+`scan()` to analyze new content.
 
 Make *sure* to add a keyword in your package.json for `"attractor"` so that
 [people will know how to find your module](https://npmjs.org/browse/keyword/attractor).
@@ -236,8 +245,6 @@ For an example of a frontend attractor module, look at the
 # todo
 
 * scopes - allow `bindings` to be deeply nested
-* attr-select - make a list selectable
-* event-handling modules
 
 # install
 
