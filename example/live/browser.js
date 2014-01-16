@@ -34,10 +34,9 @@ var active = observe();
 bind(active, 'active');
 
 active(function (txt) {
-    document.querySelector('#vote').classList.remove('hide');
+    if (!txt) return;
+    document.querySelector('h2').classList.remove('hide');
 });
-
-attr.scan(document);
 
 document.querySelector('#vote').addEventListener('click', function (ev) {
     var key = 'item!' + active();
@@ -46,3 +45,6 @@ document.querySelector('#vote').addEventListener('click', function (ev) {
         db.put(key, value);
     });
 });
+
+attr.scan(document);
+window.db = db;
