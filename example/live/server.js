@@ -14,7 +14,7 @@ var server = http.createServer(function (req, res) {
     if (!m) return ecstatic(req, res);
     
     var name = m[1] || 'default';
-    var items = db.createReadStream({ start: name + '!', end: name + '!\uffff' });
+    var items = db.createReadStream({ start: 'item!', end: 'item!\uffff' });
     
     fs.createReadStream(__dirname + '/html/index.html').pipe(hyperstream({
         '#name': name,

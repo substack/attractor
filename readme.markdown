@@ -6,6 +6,9 @@ Snap together frontend and backend modules with html attributes.
 
 ## 2-way binding example
 
+Everybody has 2-way binding examples, so here it is. Skip to the next example if
+you want to see something new.
+
 Write some html and annotate the elements you want to bind with a special
 `"binder"` attribute:
 
