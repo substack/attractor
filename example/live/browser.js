@@ -16,27 +16,26 @@ document.querySelector('#vote').addEventListener('click', function (ev) {
     });
 });
 
-document.querySelector('#new').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var title = this.elements.title.value;
-    db.put('item!' + title, { score: 0, title: title });
-    this.elements.title.value = '';
-});
-
 var live = require('attr-range')(function (rel) {
     var r = db.livefeed(rel.range).pipe(render());
     r.on('element', function (elem) { attr.scan(elem) });
     r.sortTo(rel.element, '.score');
 });
 
-var chooser = require('attr-chooser')('active', function (elem, ev, group) {
+var chooser = require('attr-chooser')('active', function (elem) {
     active.set(elem.querySelector('.title').textContent);
+});
+
+var submit = require('attr-submit')(function (form, fields) {
+    db.put('item!' + fields.title, { score: 0, title: fields.title });
+    form.reset();
 });
 
 var attractor = require('../../');
 var attr = attractor({
     'data-start': live,
-    'chooser': chooser
+    'x-submit': submit,
+    'x-chooser': chooser
 });
 attr.scan(document);
 
