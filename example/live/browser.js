@@ -20,6 +20,7 @@ document.querySelector('#new').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var title = this.elements.title.value;
     db.put('item!' + title, { score: 0, title: title });
+    this.elements.title.value = '';
 });
 
 var live = require('attr-range')(function (rel) {

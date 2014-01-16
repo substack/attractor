@@ -53,7 +53,116 @@ attribute system in place. Let's go crazy and make a web app that renders in
 node and in the browser with page content that updates automatically whenever
 the database changes and full database access from the client!
 
-COMING SOON
+This example is a work in progress. It will only get smaller as more modules are
+written.
+
+First render some items server-side:
+
+``` js
+var http = require('http');
+var fs = require('fs');
+var ecstatic = require('ecstatic')(__dirname + '/static');
+var hyperstream = require('hyperstream');
+
+var feed = require('multilevel-feed');
+var level = require('level');
+var db = level('/tmp/lists.db', { encoding: 'json' });
+
+var render = require('./render.js');
+
+var server = http.createServer(function (req, res) {
+    var m = /\/(\w+)*(\?|$)/.exec(req.url);
+    if (!m) return ecstatic(req, res);
+    
+    var name = m[1] || 'default';
+    var items = db.createReadStream({ start: 'item!', end: 'item!\uffff' });
+    
+    fs.createReadStream(__dirname + '/html/index.html').pipe(hyperstream({
+        '#name': name,
+        '#list': {
+            _html: items.pipe(render()),
+            'data-start': items._options.start,
+            'data-end': items._options.end
+        }
+    })).pipe(res);
+});
+server.listen(5000);
+
+var shoe = require('shoe');
+var sock = shoe(function (stream) { stream.pipe(feed(db)).pipe(stream) });
+sock.install(server, '/sock');
+```
+
+Here is the browser code. It will shrink drastically with more modules:
+
+```
+var render = require('./render.js');
+var db = require('multilevel-feed')();
+var observe = require('observ');
+var active = observe();
+
+active(function (txt) {
+    document.querySelector('#active').textContent = txt;
+    document.querySelector('#vote').classList.remove('hide');
+});
+
+document.querySelector('#vote').addEventListener('click', function (ev) {
+    var key = 'item!' + active();
+    db.get(key, function (err, value) {
+        value.score += 5;
+        db.put(key, value);
+    });
+});
+
+document.querySelector('#new').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var title = this.elements.title.value;
+    db.put('item!' + title, { score: 0, title: title });
+    this.elements.title.value = '';
+});
+
+var live = require('attr-range')(function (rel) {
+    var r = db.livefeed(rel.range).pipe(render());
+    r.on('element', function (elem) { attr.scan(elem) });
+    r.sortTo(rel.element, '.score');
+});
+
+var chooser = require('attr-chooser')('active', function (elem, ev, group) {
+    active.set(elem.querySelector('.title').textContent);
+});
+
+var attractor = require('attractor');
+var attr = attractor({
+    'data-start': live,
+    'chooser': chooser
+});
+attr.scan(document);
+
+var sock = require('shoe')('/sock');
+sock.pipe(db.createRpcStream()).pipe(sock);
+```
+
+The shared `render.js` rendering code is:
+
+``` js
+var hyperspace = require('hyperspace');
+var fs = require('fs');
+var html = fs.readFileSync(__dirname + '/html/item.html', 'utf8');
+
+module.exports = function () {
+    return hyperspace(html, { key: 'data-key' }, function (row) {
+        return {
+            '.title': row.value.title,
+            '.score': row.value.score
+        };
+    });
+};
+```
+
+We just made a live-updating application with shared browser and server
+rendering backed to leveldb in just 74 lines of javascript!
+
+That is still too many lines, but getting there.
 
 # methods
 
