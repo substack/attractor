@@ -4,7 +4,7 @@ var submit = require('attr-submit');
 var chooser = require('attr-chooser');
 
 var render = require('./render.js');
-var observe = require('observ');
+var observe = require('observable');
 
 var db = require('multilevel-feed')();
 var sock = require('shoe')('/sock');
@@ -24,16 +24,20 @@ attr.add('x-submit', submit(function (form, fields) {
 }));
 
 attr.add('x-chooser', chooser('active', function (elem) {
-    active.set(elem.querySelector('.title').textContent);
+    active(elem.querySelector('.title').textContent);
 }));
 
-attr.scan(document);
+var bind = require('attr-bind')();
+attr.add('x-bind', bind);
 
 var active = observe();
+bind(active, 'active');
+
 active(function (txt) {
-    document.querySelector('#active').textContent = txt;
     document.querySelector('#vote').classList.remove('hide');
 });
+
+attr.scan(document);
 
 document.querySelector('#vote').addEventListener('click', function (ev) {
     var key = 'item!' + active();
