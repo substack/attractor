@@ -4,7 +4,8 @@
   "description": "snap together frontend and backend modules with html attributes",
   "main": "index.js",
   "dependencies": {
-    "brace-expansion": "~0.0.0"
+    "brace-expansion": "~0.0.0",
+    "isarray": "0.0.1"
   },
   "devDependencies": {
     "tape": "~2.3.2"
