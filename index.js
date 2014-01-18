@@ -45,7 +45,7 @@ Attractor.prototype.add = function (key, cb) {
     var s = this._selectors[ex[0]];
     if (!s) s = this._selectors[ex[0]] = [];
     
-    s.push({ extra: ex.slice(1), cb: cb });
+    s.push({ extra: ex.slice(1), cb: cb, fns: [] });
 };
 
 Attractor.prototype.scan = function (root) {
@@ -74,17 +74,25 @@ Attractor.prototype.scan = function (root) {
                 if (k !== r.extra.length) continue;
                 
                 if (typeof r.cb !== 'function') continue;
-                var f = r.cb((function (elem) {
-                    return function () {
-                        for (var k = 0; k < values.length; k++) {
-                            var p = self.lookup(values[k]);
-                            if (!p) continue;
-                            if (p && typeof p.value === 'function') {
-                                p.value.call(p.context, elem);
-                            }
-                        }
-                    };
-                })(elems[j]));
+                
+                var f = r.f || r.cb(function () {
+                    for (var i = 0; i < r.fns.length; i++) {
+                        r.fns[i].apply(this, arguments);
+                    }
+                });
+                r.f = f;
+                for (var k = 0; k < values.length; k++) {
+                    var p = self.lookup(values[k]);
+                    if (!p) continue;
+                    if (p && typeof p.value === 'function') {
+                        r.fns.push((function (p) {
+                            return function () {
+                                p.value.apply(p.context, arguments);
+                            };
+                        })(p));
+                    }
+                }
+                
                 if (typeof f === 'function') {
                     f.apply(this, [ elems[j] ].concat(values));
                 }
