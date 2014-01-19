@@ -29,10 +29,19 @@ SortedList.prototype.addItem = function (form, fields) {
     form.reset();
 };
 
+SortedList.prototype.vote = function (ev) {
+    var key = 'item!' + this.active();
+    db.get(key, function (err, value) {
+        value.score += 5;
+        db.put(key, value);
+    });
+};
+
 var attr = attractor({
     'x-chooser': [ require('attr-chooser'), 'active' ],
     'x-bind': require('attr-bind'),
     'x-range': [ require('attr-range'), 'data-start', 'data-end' ],
-    'x-submit': require('attr-submit')
+    'x-submit': require('attr-submit'),
+    'x-click': [ require('attr-ev'), 'click' ]
 }, new SortedList);
 attr.scan(document);
