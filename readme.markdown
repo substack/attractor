@@ -121,7 +121,7 @@ declaratively:
 
 Here is the browser code:
 
-```
+``` js
 var attractor = require('attractor');
 var observe = require('observable');
 var render = require('./render.js');
