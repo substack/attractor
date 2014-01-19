@@ -9,7 +9,6 @@ sock.pipe(db.createRpcStream()).pipe(sock);
 function SortedList () {
     this.active = observe('');
     this.active(function (txt) {
-console.log('txt=', txt); 
         if (!txt) return;
         document.querySelector('h2').classList.remove('hide');
     });

@@ -27,6 +27,7 @@ Attractor.prototype.lookup = function (str) {
 };
 
 Attractor.prototype.add = function (key, cb) {
+    var self = this;
     var ex = expand(key);
     if (isArray(cb)) {
         cb = (function (args) {
@@ -45,7 +46,11 @@ Attractor.prototype.add = function (key, cb) {
     var s = this._selectors[ex[0]];
     if (!s) s = this._selectors[ex[0]] = [];
     
-    s.push({ extra: ex.slice(1), cb: cb, fns: [] });
+    s.push(new Match({
+        attrs: ex,
+        parent: this,
+        lookup: function (key) { return self.lookup(key) }
+    }, cb));
 };
 
 Attractor.prototype.scan = function (root) {
@@ -64,40 +69,47 @@ Attractor.prototype.scan = function (root) {
         if (elems.length === 0) continue;
         
         for (var n = 0; n < rec.length; n++) {
-            var r = rec[n];
-            for (var j = 0; j < elems.length; j++) {
-                var values = [ elems[j].getAttribute(key) ];
-                for (var k = 0; k < r.extra.length; k++) {
-                    var v = elems[j].getAttribute(r.extra[k]);
-                    if (v === null || v === undefined) break;
-                }
-                if (k !== r.extra.length) continue;
-                
-                if (typeof r.cb !== 'function') continue;
-                
-                var f = r.f || r.cb(function () {
-                    for (var i = 0; i < r.fns.length; i++) {
-                        r.fns[i].apply(this, arguments);
-                    }
-                });
-                r.f = f;
-                for (var k = 0; k < values.length; k++) {
-                    var p = self.lookup(values[k]);
-                    if (!p) continue;
-                    if (p && typeof p.value === 'function') {
-                        r.fns.push((function (p) {
-                            return function () {
-                                p.value.apply(p.context, arguments);
-                            };
-                        })(p));
-                    }
-                }
-                
-                if (typeof f === 'function') {
-                    f.apply(this, [ elems[j] ].concat(values));
-                }
+            rec[n].test(elems);
+        }
+    }
+};
+
+function Match (opts, fn) {
+    var self = this;
+    this.key = opts.attrs[0];
+    this.extra = opts.attrs.slice(1);
+    this.lookup = opts.lookup;
+    this.parent = opts.parent;
+    this.listeners = {};
+    
+    this.elemF = fn(function () {
+        var keys = objectKeys(self.listeners);
+        for (var i = 0; i < keys.length; i++) {
+            var p = self.listeners[keys[i]];
+            p.value.apply(p.context, arguments);
+        }
+    });
+}
+
+Match.prototype.test = function (elems) {
+    for (var j = 0; j < elems.length; j++) {
+        var values = [ elems[j].getAttribute(this.key) ];
+        for (var k = 0; k < this.extra.length; k++) {
+            var v = elems[j].getAttribute(this.extra[k]);
+            if (v === null || v === undefined) break;
+        }
+        if (k !== this.extra.length) continue;
+        
+        for (var k = 0; k < values.length; k++) {
+            var p = this.lookup(values[k]);
+            if (!p) continue;
+            var lx = this.listeners[values[k]];
+            if (lx) continue;
+            if (p && typeof p.value === 'function') {
+                this.listeners[values[k]] = p;
             }
         }
+        this.elemF.apply(this.parent, [ elems[j] ].concat(values));
     }
 };
 
