@@ -1,8 +1,4 @@
 var attractor = require('../../');
-var bind = require('attr-bind')({
-    yourName: function (value) {
-        return value.toUpperCase();
-    }
-});
-var attr = attractor({ 'binder': bind });
+var scope = { yourName: function (txt) { console.log(txt) } };
+var attr = attractor({ 'binder': require('attr-bind') }, scope);
 attr.scan(document);

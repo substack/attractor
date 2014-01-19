@@ -32,8 +32,8 @@ elements into [attr-bind](https://npmjs.org/package/attr-bind):
 
 ``` js
 var attractor = require('attractor');
-var bind = require('attr-bind')();
-var attr = attractor({ 'binder': bind });
+var scope = { yourName: function (txt) { console.log(txt) } };
+var attr = attractor({ 'binder': require('attr-bind') }, scope);
 attr.scan(document);
 ```
 
@@ -93,53 +93,82 @@ var sock = shoe(function (stream) { stream.pipe(feed(db)).pipe(stream) });
 sock.install(server, '/sock');
 ```
 
-Here is the browser code. It will shrink drastically with more modules:
+In our html, we'll add some attributes for the browser code to hook on to,
+declaratively:
+
+``` html
+<html>
+  <head>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <h1 id="name"></h1>
+    <div id="list" x-range="range"></div>
+    <h2 class="hide">
+      <span id="active" x-bind="active"></span>
+      <button x-click="vote">vote</button>
+    </h2>
+    
+    <form x-submit="addItem">
+      <input name="title" type="text">
+      <input type="submit" value="create">
+    </form>
+    
+    <script src="bundle.js"></script>
+  </body>
+</html>
+```
+
+Here is the browser code:
 
 ```
+var attractor = require('attractor');
+var observe = require('observable');
 var render = require('./render.js');
-var db = require('multilevel-feed')();
-var observe = require('observ');
-var active = observe();
 
-active(function (txt) {
-    document.querySelector('#active').textContent = txt;
-    document.querySelector('#vote').classList.remove('hide');
-});
+window.db = require('multilevel-feed')();
+var sock = require('shoe')('/sock');
+sock.pipe(db.createRpcStream()).pipe(sock);
+ 
+function SortedList () {
+    this.active = observe('');
+    this.active(function (txt) {
+        if (!txt) return;
+        document.querySelector('h2').classList.remove('hide');
+    });
+}
 
-document.querySelector('#vote').addEventListener('click', function (ev) {
-    var key = 'item!' + active();
+SortedList.prototype.range = function (xr) {
+    var r = db.livefeed(xr.range).pipe(render());
+    r.on('element', function (elem) { attr.scan(elem) });
+    r.sortTo(xr.element, '.score');
+};
+
+SortedList.prototype.select = function (elem) {
+    this.active(elem.querySelector('.title').textContent);
+};
+
+SortedList.prototype.addItem = function (form, fields) {
+    db.put('item!' + fields.title, { score: 0, title: fields.title });
+    form.reset();
+};
+
+SortedList.prototype.vote = function (ev) {
+    var key = 'item!' + this.active();
     db.get(key, function (err, value) {
         value.score += 5;
         db.put(key, value);
     });
-});
+};
 
-document.querySelector('#new').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var title = this.elements.title.value;
-    db.put('item!' + title, { score: 0, title: title });
-    this.elements.title.value = '';
-});
-
-var live = require('attr-range')(function (rel) {
-    var r = db.livefeed(rel.range).pipe(render());
-    r.on('element', function (elem) { attr.scan(elem) });
-    r.sortTo(rel.element, '.score');
-});
-
-var chooser = require('attr-chooser')('active', function (elem, ev, group) {
-    active.set(elem.querySelector('.title').textContent);
-});
-
-var attractor = require('attractor');
 var attr = attractor({
-    'data-start': live,
-    'chooser': chooser
-});
+    'x-chooser': [ require('attr-chooser'), 'active' ],
+    'x-bind': require('attr-bind'),
+    'x-range': [ require('attr-range'), 'data-start', 'data-end' ],
+    'x-submit': require('attr-submit'),
+    'x-click': [ require('attr-ev'), 'click' ]
+}, new SortedList);
 attr.scan(document);
-
-var sock = require('shoe')('/sock');
-sock.pipe(db.createRpcStream()).pipe(sock);
 ```
 
 The shared `render.js` rendering code is:
@@ -159,10 +188,19 @@ module.exports = function () {
 };
 ```
 
-We just made a live-updating application with shared browser and server
-rendering backed to leveldb in just 74 lines of javascript!
+and the html for the item.html is:
 
-That is still too many lines, but getting there.
+``` html
+<div class="item" x-chooser="select">
+  <div class="title"></div>
+  <div class="score"></div>
+</div>
+```
+
+We just made a live-updating application with shared browser and server
+rendering backed to leveldb in just 77 lines of javascript!
+
+That is still too many lines, but it's getting there.
 
 # methods
 
@@ -170,24 +208,52 @@ That is still too many lines, but getting there.
 var attractor = require('attractor')
 ```
 
-## var attr = attractor(bindings)
+## var attr = attractor(bindings, scope)
 
 Return a new attractor instance `attr`.
 
 `bindings` should map
-[brace-expansion](https://npmjs.org/package/brace-expansion)
+[brace-expansion](https://npmjs.org/package/brace-expansion) attribute names
+onto attribute handlers. Each binding will be added with `.add()`.
 
-If `bindings` are given, each key will be walked over and `attr.add(key, value)`
-will be called on each `key,value` pair.
+Many attribute handlers are just modules with a function signature of:
+
+```
+module.exports = function (cb) {
+    return function (elem) { /* ... call cb() somewhere in here... */ }
+}
+```
+
+If you give an array instead of a function for the binding value, the first
+element will be taken as the function and the other elements will be bound as
+arguments to the function.
+
+Modules that require extra arguments aside from `cb` should take their arguments
+before the `cb`. The `cb` goes last.
+
+The `scope` is used to resolve the attribute values to functions. For example,
+for the html:
+
+``` html
+<div x-beep="boop"></div>
+```
+
+and an attractor binding on `x-beep`:
+
+``` js
+attribute({ 'x-beep': beeper }, scope)
+```
+
+When the `<div>` with `x-beep` is encountered, `scope.boop()` will fire with the
+arguments given to the callback inside the `beeper` module.
 
 ## attr.add(attrName, fn)
 
-Add an attribute function `fn` for elements that have attributes matching `attrName`.
-
-`attrName` is a string. The attribute value of each element in the
+Add an attribute from the
 [brace-expansion](https://npmjs.org/package/brace-expansion)
-of `attrName` will be sent after the `elem` in `fn(elem, value...)` when a
-matching element is found.
+of the string `attrName`.
+All of the attributes in the brace expansion must be present for the `fn` to
+apply.
 
 ## attr.scan(element)
 
@@ -218,9 +284,9 @@ your function in an outside function to capture arguments from the user.
 Here's a basic template you can use:
 
 ``` js
-module.exports = function (opts) {
-    return function (elem, value) {
-        // ...
+module.exports = function (cb) {
+    return function (elem) {
+        // call cb()` somewhere in here
     };
 };
 ```
@@ -241,10 +307,6 @@ easier time finding it, but this isn't strictly necessary.
 
 For an example of a frontend attractor module, look at the
 [attr-bind](https://npmjs.org/package/attr-bind) module.
-
-# todo
-
-* scopes - allow `bindings` to be deeply nested
 
 # install
 
