@@ -5,8 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "brace-expansion": "~0.0.0",
-    "isarray": "0.0.1",
-    "inherits": "~2.0.1"
+    "isarray": "0.0.1"
   },
   "devDependencies": {
     "tape": "~2.3.2"
