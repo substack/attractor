@@ -81,11 +81,13 @@ function Match (opts, fn) {
     this.lookup = opts.lookup;
     this.parent = opts.parent;
     this.listeners = {};
+    this.elements = [];
     
     this.elemF = fn(function () {
         var keys = objectKeys(self.listeners);
         for (var i = 0; i < keys.length; i++) {
-            var p = self.listeners[keys[i]];
+            var key = keys[i];
+            var p = self.listeners[key];
             p.value.apply(p.context, arguments);
         }
     });
@@ -93,6 +95,8 @@ function Match (opts, fn) {
 
 Match.prototype.test = function (elems) {
     for (var j = 0; j < elems.length; j++) {
+        if (this.elements.indexOf(elems[j]) >= 0) continue;
+        
         var values = [ elems[j].getAttribute(this.key) ];
         for (var k = 0; k < this.extra.length; k++) {
             var v = elems[j].getAttribute(this.extra[k]);
@@ -109,6 +113,8 @@ Match.prototype.test = function (elems) {
                 this.listeners[values[k]] = p;
             }
         }
+        
+        this.elements.push(elems[j]);
         this.elemF.apply(this.parent, [ elems[j] ].concat(values));
     }
 };
