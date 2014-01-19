@@ -82,18 +82,11 @@ function Match (opts, fn) {
     this.parent = opts.parent;
     this.listeners = {};
     this.elements = [];
-    
-    this.elemF = fn(function () {
-        var keys = objectKeys(self.listeners);
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];
-            var p = self.listeners[key];
-            p.value.apply(p.context, arguments);
-        }
-    });
+    this.fn = fn;
 }
 
 Match.prototype.test = function (elems) {
+    var self = this;
     for (var j = 0; j < elems.length; j++) {
         if (this.elements.indexOf(elems[j]) >= 0) continue;
         
@@ -110,12 +103,16 @@ Match.prototype.test = function (elems) {
             var lx = this.listeners[values[k]];
             if (lx) continue;
             if (p && typeof p.value === 'function') {
-                this.listeners[values[k]] = p;
+                this.listeners[values[k]] = (function (p) {
+                    self.fn(function () {
+                        p.value.apply(p.context, arguments);
+                    }).apply(self.parent, [ elems[j] ].concat(values));
+                })(p);
             }
         }
         
         this.elements.push(elems[j]);
-        this.elemF.apply(this.parent, [ elems[j] ].concat(values));
+        //this.elemF.apply(this.parent, [ elems[j] ].concat(values));
     }
 };
 
