@@ -83,16 +83,29 @@ function Match (opts, fn) {
     this.listeners = {};
     this.elements = [];
     this.fns = [];
-    this.fn = fn(function () {
+    this._tested = false;
+    
+    this.fn = fn(function f () {
+        var args = arguments;
+        if (!self._tested && self.fns.length === 0) {
+            var next = function () { f.apply(null, args) };
+            if (typeof setImmediate !== 'undefined') {
+                setImmediate(next);
+            }
+            else setTimeout(next, 0);
+        }
+        
         for (var i = 0; i < self.fns.length; i++) {
             var p = self.fns[i];
-            p.value.apply(p.context, arguments);
+            p.value.apply(p.context, args);
         }
     });
 }
 
 Match.prototype.test = function (elems) {
     var self = this;
+    this._tested = true;
+    
     for (var j = 0; j < elems.length; j++) {
         if (this.elements.indexOf(elems[j]) >= 0) continue;
         
