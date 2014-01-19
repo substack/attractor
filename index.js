@@ -82,7 +82,13 @@ function Match (opts, fn) {
     this.parent = opts.parent;
     this.listeners = {};
     this.elements = [];
-    this.fn = fn;
+    this.fns = [];
+    this.fn = fn(function () {
+        for (var i = 0; i < self.fns.length; i++) {
+            var p = self.fns[i];
+            p.value.apply(p.context, arguments);
+        }
+    });
 }
 
 Match.prototype.test = function (elems) {
@@ -100,19 +106,15 @@ Match.prototype.test = function (elems) {
         for (var k = 0; k < values.length; k++) {
             var p = this.lookup(values[k]);
             if (!p) continue;
-            var lx = this.listeners[values[k]];
-            if (lx) continue;
+            if (this.listeners[values[k]]) continue;
             if (p && typeof p.value === 'function') {
-                this.listeners[values[k]] = (function (p) {
-                    self.fn(function () {
-                        p.value.apply(p.context, arguments);
-                    }).apply(self.parent, [ elems[j] ].concat(values));
-                })(p);
+                this.fns.push(p);
+                this.listeners[values[k]] = true;
             }
         }
         
         this.elements.push(elems[j]);
-        //this.elemF.apply(this.parent, [ elems[j] ].concat(values));
+        this.fn.apply(this.parent, [ elems[j] ].concat(values));
     }
 };
 
