@@ -5,6 +5,9 @@
     "attr-range": "~0.0.0",
     "attr-chooser": "~0.0.0",
     "attr-submit": "~0.0.0",
+    "attr-bind": "~0.0.0",
+    "attr-ev": "~0.0.0",
+    "attr-submit": "~0.0.0",
     "brfs": "~0.0.8",
     "ecstatic": "~0.4.13",
     "hyperspace": "~0.9.1",
@@ -20,7 +23,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "build": "browserify browser.js -t brfs-o static/bundle.js",
+    "build": "browserify browser.js -t brfs -o static/bundle.js",
     "watch": "watchify browser.js -t brfs -o static/bundle.js -dv"
   }
 }
