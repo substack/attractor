@@ -113,7 +113,7 @@ Match.prototype.test = function (elem) {
     if (indexOf(this.elements, elem) >= 0) return;
     var value = elem.getAttribute(this.key);
     if (value === null || value === undefined) return;
-     
+    
     for (var k = 0; k < this.extra.length; k++) {
         var v = elem.getAttribute(this.extra[k]);
         if (v === null || v === undefined) break;
@@ -121,7 +121,6 @@ Match.prototype.test = function (elem) {
     if (k !== this.extra.length) return;
     
     var p = this.lookup(value);
-    if (!p) return;
     if (p && typeof p.value === 'function') {
         this.fns.push(p);
     }
