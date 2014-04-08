@@ -83,13 +83,13 @@ function Match (opts, fn) {
     this.extra = opts.attrs.slice(1);
     this.lookup = opts.lookup;
     this.parent = opts.parent;
-    this.listeners = {};
     this.elements = [];
     this.fns = [];
     this._tested = false;
     
     this.fn = fn(function f () {
         var args = arguments;
+        
         if (!self._tested && self.fns.length === 0) {
             var next = function () { f.apply(null, args) };
             if (typeof setImmediate !== 'undefined') {
@@ -122,10 +122,8 @@ Match.prototype.test = function (elem) {
     
     var p = this.lookup(value);
     if (!p) return;
-    if (this.listeners[value]) return;
     if (p && typeof p.value === 'function') {
         this.fns.push(p);
-        this.listeners[value] = true;
     }
     this.elements.push(elem);
     this.fn.apply(this.parent, [ elem, value ]);
