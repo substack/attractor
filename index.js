@@ -56,20 +56,23 @@ Attractor.prototype.add = function (key, cb) {
 Attractor.prototype.scan = function (root) {
     var self = this;
     var keys = objectKeys(this._selectors);
+    
+    var sels = [];
     for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        var sel = '*[' + key + ']';
-        var rec = this._selectors[key];
-        
-        var elems = root.querySelectorAll(sel);
-        if (root.getAttribute && root.getAttribute(key)) {
-            elems = [].slice.call(elems);
-            elems.unshift(root);
-        }
-        if (elems.length === 0) continue;
-        
-        for (var n = 0; n < rec.length; n++) {
-            rec[n].test(elems);
+        sels.push('*[' + keys[i] + ']');
+    }
+    var sel = sels.join(',');
+    var elems = [].slice.call(root.querySelectorAll(sel));
+    elems.unshift(root);
+    
+    for (var i = 0; i < elems.length; i++) {
+        var elem = elems[i];
+        for (var j = 0; j < keys.length; j++) {
+            var key = keys[j];
+            var xs = this._selectors[key];
+            for (var k = 0; k < xs.length; k++) {
+                xs[k].test(elem);
+            }
         }
     }
 };
@@ -102,33 +105,30 @@ function Match (opts, fn) {
     });
 }
 
-Match.prototype.test = function (elems) {
+Match.prototype.test = function (elem) {
     var self = this;
     this._tested = true;
     
-    for (var j = 0; j < elems.length; j++) {
-        if (this.elements.indexOf(elems[j]) >= 0) continue;
-        
-        var values = [ elems[j].getAttribute(this.key) ];
-        for (var k = 0; k < this.extra.length; k++) {
-            var v = elems[j].getAttribute(this.extra[k]);
-            if (v === null || v === undefined) break;
-        }
-        if (k !== this.extra.length) continue;
-        
-        for (var k = 0; k < values.length; k++) {
-            var p = this.lookup(values[k]);
-            if (!p) continue;
-            if (this.listeners[values[k]]) continue;
-            if (p && typeof p.value === 'function') {
-                this.fns.push(p);
-                this.listeners[values[k]] = true;
-            }
-        }
-        
-        this.elements.push(elems[j]);
-        this.fn.apply(this.parent, [ elems[j] ].concat(values));
+    if (!elem.getAttribute) return;
+    if (indexOf(this.elements, elem) >= 0) return;
+    var value = elem.getAttribute(this.key);
+    if (value === null || value === undefined) return;
+     
+    for (var k = 0; k < this.extra.length; k++) {
+        var v = elem.getAttribute(this.extra[k]);
+        if (v === null || v === undefined) break;
     }
+    if (k !== this.extra.length) return;
+    
+    var p = this.lookup(value);
+    if (!p) return;
+    if (this.listeners[value]) return;
+    if (p && typeof p.value === 'function') {
+        this.fns.push(p);
+        this.listeners[value] = true;
+    }
+    this.elements.push(elem);
+    this.fn.apply(this.parent, [ elem, value ]);
 };
 
 var objectKeys = Object.keys || function (obj) {
@@ -136,3 +136,11 @@ var objectKeys = Object.keys || function (obj) {
     for (var key in obj) keys.push(key);
     return keys;
 };
+
+function indexOf (xs, x) {
+    if (xs.indexOf) return xs.indexOf(x);
+    for (var i = 0; i < xs.length; i++) {
+        if (xs[i] === x) return i;
+    }
+    return -1;
+}
