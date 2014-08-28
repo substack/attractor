@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "observ": "~0.2.0"
+    "observ": "~0.2.0",
+    "attr-bind": "^3.0.1"
   },
   "scripts": {
     "build": "browserify browser.js -o bundle.js",
