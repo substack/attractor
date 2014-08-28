@@ -1,8 +1,8 @@
 var attractor = require('../../');
-var scope = {
-    yourName: function (txt) {
-        console.log('yourname=', txt)
-    }
-};
+var observ = require('observ');
+
+var scope = { yourName: observ() };
 var attr = attractor({ 'binder': require('attr-bind') }, scope);
 attr.scan(document);
+
+window.scope = scope; // for messing around in the REPL
