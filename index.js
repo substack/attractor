@@ -103,7 +103,7 @@ Match.prototype.register = function (elem) {
     var ff = this.fn(function () {
         var p = self.lookup(value);
         if (p && typeof p.value === 'function') {
-            p.value.call(p.context, elem, value);
+            p.value.apply(p.context, arguments);
         }
     });
     if (ff) ff.call(this.parent, elem, value);
