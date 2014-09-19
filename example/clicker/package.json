@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "attr-ev": "~0.0.0"
+  },
+  "scripts": {
+    "build": "browserify browser.js -o bundle.js",
+    "watch": "watchify browser.js -o bundle.js -dv"
+  }
+}

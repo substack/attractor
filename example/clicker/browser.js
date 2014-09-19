@@ -1,7 +1,7 @@
-var attractor = require('../');
+var attractor = require('../../');
 var scope = {
-    attach: function (elem) {
-        console.log('attach!', elem);
+    clicker: function (elem) {
+        console.log('click!', elem);
     }
 };
 
