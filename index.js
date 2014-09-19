@@ -71,7 +71,7 @@ Attractor.prototype.scan = function (root) {
             var key = keys[j];
             var xs = this._selectors[key];
             for (var k = 0; k < xs.length; k++) {
-                xs[k].test(elem);
+                xs[k].register(elem);
             }
         }
     }
@@ -84,48 +84,29 @@ function Match (opts, fn) {
     this.lookup = opts.lookup;
     this.parent = opts.parent;
     this.elements = [];
-    this.fns = [];
-    this._tested = false;
-    
-    this.fn = fn(function f () {
-        var args = arguments;
-        
-        if (!self._tested && self.fns.length === 0) {
-            var next = function () { f.apply(null, args) };
-            if (typeof setImmediate !== 'undefined') {
-                setImmediate(next);
-            }
-            else setTimeout(next, 0);
-        }
-        
-        for (var i = 0; i < self.fns.length; i++) {
-            var p = self.fns[i];
-            p.value.apply(p.context, args);
-        }
-    });
+    this.fn = fn;
 }
 
-Match.prototype.test = function (elem) {
+Match.prototype.register = function (elem) {
     var self = this;
-    this._tested = true;
-    
-    if (!elem.getAttribute) return;
-    if (indexOf(this.elements, elem) >= 0) return;
+    if (!elem.getAttribute) return false;
+    if (indexOf(this.elements, elem) >= 0) return false;
     var value = elem.getAttribute(this.key);
-    if (value === null || value === undefined) return;
+    if (value === null || value === undefined) return false;
     
     for (var k = 0; k < this.extra.length; k++) {
         var v = elem.getAttribute(this.extra[k]);
-        if (v === null || v === undefined) break;
-    }
-    if (k !== this.extra.length) return;
-    
-    var p = this.lookup(value);
-    if (p && typeof p.value === 'function') {
-        this.fns.push(p);
+        if (v === null || v === undefined) return false;
     }
     this.elements.push(elem);
-    this.fn.apply(this.parent, [ elem, value ]);
+    
+    var ff = this.fn(function () {
+        var p = self.lookup(value);
+        if (p && typeof p.value === 'function') {
+            p.value.call(p.context, elem, value);
+        }
+    });
+    if (ff) ff.call(this.parent, elem, value);
 };
 
 var objectKeys = Object.keys || function (obj) {
